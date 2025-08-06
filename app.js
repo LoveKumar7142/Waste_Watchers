@@ -22,13 +22,14 @@ dotenv.config({ path: "./.env" });
 
 require("dotenv").config();
 
+const MySQLStore = require('express-mysql-session')(session);
 // Configure the database connection
-const db = mysql.createConnection({
+const db = new MySQLStore({
   host: process.env.MYSQLHOST,
+  port: process.env.MYSQLPORT,
   user: process.env.MYSQLUSER,
   password: process.env.MYSQLPASSWORD,
-  database: process.env.MYSQLDATABASE,
-  port: process.env.MYSQLPORT
+  database: process.env.MYSQLDATABASE
 });
 
 db.connect((err) => {
@@ -51,13 +52,16 @@ app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
 // Session middleware
-app.use(
-  session({
-    secret: "your_secret_key",
-    resave: false,
-    saveUninitialized: true,
-  })
-);
+app.use(session({
+  key: 'user_sid',
+  secret: 'your_secret_key', // change this to something strong
+  resave: false,
+  saveUninitialized: false,
+  store: sessionStore,
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 2 // 2 hours
+  }
+}));
 
 // Middleware to check login status and role
 app.use((req, res, next) => {
