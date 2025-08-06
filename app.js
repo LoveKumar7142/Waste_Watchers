@@ -1,6 +1,7 @@
 // Import required modules
 const express = require("express");
 const session = require("express-session");
+const MySQLStore = require('express-mysql-session')(session);
 const multer = require("multer");
 const path = require("path");
 const bcrypt = require("bcryptjs");
@@ -22,14 +23,12 @@ dotenv.config({ path: "./.env" });
 
 require("dotenv").config();
 
-const MySQLStore = require('express-mysql-session')(session);
 // Configure the database connection
-const db = new MySQLStore({
-  host: process.env.MYSQLHOST,
-  port: process.env.MYSQLPORT,
-  user: process.env.MYSQLUSER,
-  password: process.env.MYSQLPASSWORD,
-  database: process.env.MYSQLDATABASE
+const db = mysql.createConnection({
+  host: process.env.DATABASE_HOST,
+  user: process.env.DATABASE_USER,
+  password: process.env.DATABASE_PASSWORD,
+  database: process.env.DATABASE,
 });
 
 db.connect((err) => {
@@ -52,12 +51,21 @@ app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
 // Session middleware
+// Session store
+const sessionStore = new MySQLStore({
+  host: process.env.MYSQLHOST,
+  port: process.env.MYSQLPORT,
+  user: process.env.MYSQLUSER,
+  password: process.env.MYSQLPASSWORD,
+  database: process.env.MYSQLDATABASE
+});
+
 app.use(session({
   key: 'user_sid',
-  secret: 'your_secret_key', // change this to something strong
+  secret: process.env.SESSION_SECRET,
+  store: sessionStore,
   resave: false,
   saveUninitialized: false,
-  store: sessionStore,
   cookie: {
     maxAge: 1000 * 60 * 60 * 2 // 2 hours
   }
