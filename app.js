@@ -1,7 +1,6 @@
 // Import required modules
 const express = require("express");
 const session = require("express-session");
-const MySQLStore = require('express-mysql-session')(session);
 const multer = require("multer");
 const path = require("path");
 const bcrypt = require("bcryptjs");
@@ -51,25 +50,13 @@ app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
 // Session middleware
-// Session store
-const sessionStore = new MySQLStore({
-  host: process.env.MYSQLHOST,
-  port: process.env.MYSQLPORT,
-  user: process.env.MYSQLUSER,
-  password: process.env.MYSQLPASSWORD,
-  database: process.env.MYSQLDATABASE
-});
-
-app.use(session({
-  key: 'user_sid',
-  secret: process.env.SESSION_SECRET,
-  store: sessionStore,
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    maxAge: 1000 * 60 * 60 * 2 // 2 hours
-  }
-}));
+app.use(
+  session({
+    secret: "your_secret_key",
+    resave: false,
+    saveUninitialized: true,
+  })
+);
 
 // Middleware to check login status and role
 app.use((req, res, next) => {
